@@ -51,7 +51,7 @@
 
         .jogadores-input {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -86,6 +86,40 @@
         .jogador-item input:focus {
             border-color: #4CAF50;
             outline: none;
+        }
+
+        .goleiro-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .goleiro-checkbox input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .presenca-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .presenca-checkbox input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .jogador-ausente {
+            opacity: 0.5;
+            background: #f8f9fa !important;
+        }
+
+        .jogador-ausente input {
+            background: #e9ecef;
+            color: #6c757d;
         }
 
         .btn {
@@ -186,6 +220,24 @@
             text-align: center;
         }
 
+        .goleiro-card {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border: 2px solid #f1c40f;
+            position: relative;
+        }
+
+        .goleiro-card::before {
+            content: '🥅';
+            position: absolute;
+            left: -5px;
+            top: -5px;
+            font-size: 1.2em;
+        }
+
+        .goleiro-nota {
+            background: #f39c12;
+        }
+
         .estatisticas {
             display: flex;
             justify-content: space-around;
@@ -269,7 +321,7 @@
             
             <div class="controles">
                 <button class="btn btn-secondary" onclick="preencherExemplo()">
-                    📝 Preencher Exemplo
+                    📝 Preencher Time
                 </button>
                 <button class="btn btn-warning" onclick="limparTodos()">
                     🗑️ Limpar Tudo
@@ -339,8 +391,53 @@
                 jogadorItem.innerHTML = `
                     <input type="text" placeholder="Nome do Jogador ${i}" id="nome${i}">
                     <input type="number" min="0" max="10" step="0.1" placeholder="Nota" id="nota${i}">
+                    <div class="goleiro-checkbox">
+                        <input type="checkbox" id="goleiro${i}" onchange="limitarGoleiros()">
+                        <label for="goleiro${i}">🥅</label>
+                    </div>
+                    <div class="presenca-checkbox">
+                        <input type="checkbox" id="presente${i}" checked onchange="atualizarEstadoJogador(${i})">
+                        <label for="presente${i}">✅</label>
+                    </div>
                 `;
                 container.appendChild(jogadorItem);
+            }
+        }
+
+        // Atualizar estado visual do jogador baseado na presença
+        function atualizarEstadoJogador(index) {
+            const jogadorItem = document.querySelector(`#nome${index}`).parentElement;
+            const presente = document.getElementById(`presente${index}`).checked;
+            const goleiroCheckbox = document.getElementById(`goleiro${index}`);
+            
+            if (!presente) {
+                jogadorItem.classList.add('jogador-ausente');
+                // Desmarcar como goleiro se ausente
+                goleiroCheckbox.checked = false;
+                goleiroCheckbox.disabled = true;
+            } else {
+                jogadorItem.classList.remove('jogador-ausente');
+                goleiroCheckbox.disabled = false;
+            }
+        }
+
+        // Limitar seleção a apenas 2 goleiros
+        function limitarGoleiros() {
+            const checkboxes = [];
+            for (let i = 1; i <= 16; i++) {
+                const goleiroCheckbox = document.getElementById(`goleiro${i}`);
+                const presente = document.getElementById(`presente${i}`).checked;
+                if (presente) { // Só contar goleiros presentes
+                    checkboxes.push(goleiroCheckbox);
+                }
+            }
+            
+            const selecionados = checkboxes.filter(cb => cb.checked);
+            
+            if (selecionados.length > 2) {
+                // Desmarcar o último selecionado
+                event.target.checked = false;
+                alert('⚠️ Máximo de 2 goleiros permitidos!');
             }
         }
 
@@ -348,15 +445,26 @@
         function preencherExemplo() {
             const nomes = [
                 'Vanelli', 'Leandro', 'Rodrigo', 'Airton', 'Clinton', 'Cardozo', 'Patrick', 'Joaquim',
-                'Denis', 'Rafel', 'Carlos', 'Cristiano', 'Micael', 'teste', 'teste', 'teste'
+                'Denis', 'Rafel', 'Carlos', 'Cristiano', 'Micael', 'Convidado 14', 'Convidado 15', 'Convidado 16'
             ];
             
-            const notas = [8, 8, 8, 8, 8, 10, 8, 9, 8, 8, 8, 10, 9, 0, 0, 0];
+            const notas = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
+            
+            // Simular que alguns jogadores não vieram (últimos 2 por exemplo)
+            const presentes = [true, true, true, true, true, true, true, true, 
+                             true, true, true, true, true, false, false, false];
             
             for (let i = 1; i <= 16; i++) {
                 document.getElementById(`nome${i}`).value = nomes[i-1];
                 document.getElementById(`nota${i}`).value = notas[i-1];
+                document.getElementById(`goleiro${i}`).checked = false;
+                document.getElementById(`presente${i}`).checked = presentes[i-1];
+                atualizarEstadoJogador(i);
             }
+            
+            // Definir os dois primeiros presentes como goleiros (Vanelli e Leandro)
+            document.getElementById('goleiro1').checked = true;
+            document.getElementById('goleiro2').checked = true;
         }
 
         // Limpar todos os campos
@@ -364,6 +472,9 @@
             for (let i = 1; i <= 16; i++) {
                 document.getElementById(`nome${i}`).value = '';
                 document.getElementById(`nota${i}`).value = '';
+                document.getElementById(`goleiro${i}`).checked = false;
+                document.getElementById(`presente${i}`).checked = true;
+                atualizarEstadoJogador(i);
             }
             document.getElementById('resultado').classList.add('hidden');
         }
@@ -375,37 +486,105 @@
             for (let i = 1; i <= 16; i++) {
                 const nome = document.getElementById(`nome${i}`).value.trim();
                 const nota = parseFloat(document.getElementById(`nota${i}`).value);
+                const isGoleiro = document.getElementById(`goleiro${i}`).checked;
+                const presente = document.getElementById(`presente${i}`).checked;
                 
-                if (nome && !isNaN(nota) && nota >= 0 && nota <= 10) {
-                    jogadores.push({ nome, nota });
+                if (nome && !isNaN(nota) && nota >= 0 && nota <= 10 && presente) {
+                    jogadores.push({ nome, nota, isGoleiro, presente });
                 }
             }
             
             return jogadores;
         }
 
-        // Algoritmo para dividir times de forma equilibrada
+        // Algoritmo para dividir times de forma equilibrada e randômica
         function dividirTimesEquilibrados(jogadores) {
-            // Ordenar jogadores por nota (decrescente)
-            const jogadoresOrdenados = [...jogadores].sort((a, b) => b.nota - a.nota);
+            // Separar goleiros e jogadores de linha
+            const goleiros = jogadores.filter(j => j.isGoleiro);
+            const jogadoresLinha = jogadores.filter(j => !j.isGoleiro);
             
-            const timeA = [];
-            const timeB = [];
+            // Gerar múltiplas combinações aleatórias e escolher a mais equilibrada
+            let melhorDivisao = null;
+            let menorDiferenca = Infinity;
+            const tentativas = 100; // Número de tentativas para encontrar melhor divisão
+            let tentativasUsadas = 0;
             
-            // Distribuição alternada dos melhores jogadores
-            for (let i = 0; i < jogadoresOrdenados.length; i++) {
-                if (i % 2 === 0) {
-                    timeA.push(jogadoresOrdenados[i]);
+            for (let tentativa = 0; tentativa < tentativas; tentativa++) {
+                tentativasUsadas++;
+                const divisao = gerarDivisaoAleatoria(goleiros, jogadoresLinha);
+                const mediaA = calcularMediaTime(divisao.timeA);
+                const mediaB = calcularMediaTime(divisao.timeB);
+                const diferenca = Math.abs(mediaA - mediaB);
+                
+                if (diferenca < menorDiferenca) {
+                    menorDiferenca = diferenca;
+                    melhorDivisao = { ...divisao, tentativasUsadas, diferenca: diferenca.toFixed(3) };
+                }
+                
+                // Se encontrou divisão muito equilibrada, pode parar
+                if (diferenca < 0.05) break;
+            }
+            
+            return melhorDivisao;
+        }
+        
+        // Gerar uma divisão completamente aleatória
+        function gerarDivisaoAleatoria(goleiros, jogadoresLinha) {
+            // Embaralhar jogadores de linha
+            const jogadoresEmbaralhados = [...jogadoresLinha];
+            embaralharArray(jogadoresEmbaralhados);
+            
+            let timeA = [];
+            let timeB = [];
+            
+            // Distribuir goleiros
+            if (goleiros.length === 2) {
+                const goleirosCopia = [...goleiros];
+                embaralharArray(goleirosCopia);
+                timeA.push(goleirosCopia[0]);
+                timeB.push(goleirosCopia[1]);
+            } else if (goleiros.length === 1) {
+                if (Math.random() < 0.5) {
+                    timeA.push(goleiros[0]);
                 } else {
-                    timeB.push(jogadoresOrdenados[i]);
+                    timeB.push(goleiros[0]);
                 }
             }
             
-            // Embaralhar dentro de cada time para randomizar
-            embaralharArray(timeA);
-            embaralharArray(timeB);
+            // Distribuir jogadores de linha alternadamente (mas de forma embaralhada)
+            for (let i = 0; i < jogadoresEmbaralhados.length; i++) {
+                if (timeA.length <= timeB.length) {
+                    timeA.push(jogadoresEmbaralhados[i]);
+                } else {
+                    timeB.push(jogadoresEmbaralhados[i]);
+                }
+            }
+            
+            // Embaralhar ordem dentro de cada time
+            embaralharTimeMantenhoGoleiro(timeA);
+            embaralharTimeMantenhoGoleiro(timeB);
             
             return { timeA, timeB };
+        }
+        
+        // Embaralhar time mantendo goleiro na primeira posição
+        function embaralharTimeMantenhoGoleiro(time) {
+            const temGoleiro = time[0] && time[0].isGoleiro;
+            if (temGoleiro) {
+                const goleiro = time[0];
+                const jogadoresLinha = time.slice(1);
+                embaralharArray(jogadoresLinha);
+                time.splice(0, time.length, goleiro, ...jogadoresLinha);
+            } else {
+                embaralharArray(time);
+            }
+        }
+        
+        // Calcular média de um time
+        function calcularMediaTime(time) {
+            if (time.length === 0) return 0;
+            const soma = time.reduce((total, jogador) => total + jogador.nota, 0);
+            return soma / time.length;
         }
 
         // Função para embaralhar array
@@ -425,32 +604,37 @@
 
         // Exibir jogador no time
         function exibirJogador(jogador) {
+            const cardClass = jogador.isGoleiro ? 'jogador-card goleiro-card' : 'jogador-card';
+            const notaClass = jogador.isGoleiro ? 'jogador-nota goleiro-nota' : 'jogador-nota';
+            const posicao = jogador.isGoleiro ? '🥅 ' : '';
+            
             return `
-                <div class="jogador-card">
-                    <span class="jogador-nome">${jogador.nome}</span>
-                    <span class="jogador-nota">${jogador.nota}</span>
+                <div class="${cardClass}">
+                    <span class="jogador-nome">${posicao}${jogador.nome}</span>
+                    <span class="${notaClass}">${jogador.nota}</span>
                 </div>
             `;
         }
 
         // Avaliar equilíbrio entre times
-        function avaliarEquilibrio(mediaA, mediaB) {
+        function avaliarEquilibrio(mediaA, mediaB, tentativasUsadas = null) {
             const diferenca = Math.abs(mediaA - mediaB);
+            let textoTentativas = tentativasUsadas ? ` (${tentativasUsadas} tentativas)` : '';
             
-            if (diferenca <= 0.3) {
+            if (diferenca <= 0.2) {
                 return {
                     classe: 'equilibrio-bom',
-                    texto: `✅ Times muito equilibrados! Diferença de média: ${diferenca.toFixed(2)}`
+                    texto: `✅ Times muito equilibrados! Diferença: ${diferenca.toFixed(3)}${textoTentativas}`
                 };
-            } else if (diferenca <= 0.6) {
+            } else if (diferenca <= 0.4) {
                 return {
                     classe: 'equilibrio-medio',
-                    texto: `⚠️ Times razoavelmente equilibrados. Diferença de média: ${diferenca.toFixed(2)}`
+                    texto: `⚠️ Times razoavelmente equilibrados. Diferença: ${diferenca.toFixed(3)}${textoTentativas}`
                 };
             } else {
                 return {
                     classe: 'equilibrio-ruim',
-                    texto: `❌ Times desiquilibrados. Diferença de média: ${diferenca.toFixed(2)}`
+                    texto: `❌ Times desiquilibrados. Diferença: ${diferenca.toFixed(3)}${textoTentativas}`
                 };
             }
         }
@@ -459,46 +643,82 @@
         function dividirTimes() {
             const jogadores = coletarJogadores();
             
-            if (jogadores.length !== 16) {
-                alert('❌ Por favor, preencha todos os 16 jogadores com nomes e notas válidas (0-10)!');
+            if (jogadores.length < 4) {
+                alert(`❌ Precisa de pelo menos 4 jogadores presentes para dividir os times!\nPresentes: ${jogadores.length}`);
                 return;
             }
             
-            const { timeA, timeB } = dividirTimesEquilibrados(jogadores);
+            if (jogadores.length % 2 !== 0) {
+                alert(`⚠️ Número ímpar de jogadores presentes (${jogadores.length}). Um time ficará com um jogador a mais.`);
+            }
             
-            // Calcular estatísticas
-            const statsA = calcularEstatisticas(timeA);
-            const statsB = calcularEstatisticas(timeB);
+            // Verificar se há exatamente 2 goleiros presentes
+            const goleiros = jogadores.filter(j => j.isGoleiro);
+            if (goleiros.length !== 2) {
+                if (goleiros.length === 0) {
+                    alert('⚠️ Nenhum goleiro selecionado! Continuando sem goleiros específicos...');
+                } else if (goleiros.length === 1) {
+                    alert('⚠️ Apenas 1 goleiro presente! Um time ficará sem goleiro...');
+                } else {
+                    alert(`❌ Selecione exatamente 2 goleiros dentre os jogadores presentes!\nGoleiros presentes: ${goleiros.length}\n\nMarque 2 jogadores presentes com o ícone de goleiro 🥅`);
+                    return;
+                }
+            }
             
-            // Exibir times
-            document.getElementById('timeA').innerHTML = timeA.map(exibirJogador).join('');
-            document.getElementById('timeB').innerHTML = timeB.map(exibirJogador).join('');
-            
-            // Exibir estatísticas
-            document.getElementById('mediaA').textContent = statsA.media;
-            document.getElementById('totalA').textContent = statsA.total;
-            document.getElementById('mediaB').textContent = statsB.media;
-            document.getElementById('totalB').textContent = statsB.total;
-            
-            // Avaliar equilíbrio
-            const equilibrio = avaliarEquilibrio(parseFloat(statsA.media), parseFloat(statsB.media));
-            const equilibrioEl = document.getElementById('equilibrioInfo');
-            equilibrioEl.className = `equilibrio ${equilibrio.classe}`;
-            equilibrioEl.innerHTML = `<strong>${equilibrio.texto}</strong>`;
-            
-            // Mostrar resultado
-            document.getElementById('resultado').classList.remove('hidden');
-            
-            // Scroll para o resultado
-            document.getElementById('resultado').scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'start'
-            });
-            
-            console.log('⚽ Times divididos com sucesso!');
-            console.log('Time A:', timeA.map(j => `${j.nome} (${j.nota})`));
-            console.log('Time B:', timeB.map(j => `${j.nome} (${j.nota})`));
-            console.log(`Estatísticas - Time A: ${statsA.media} | Time B: ${statsB.media}`);
+            try {
+                const { timeA, timeB } = dividirTimesEquilibrados(jogadores);
+                
+                // Calcular estatísticas
+                const statsA = calcularEstatisticas(timeA);
+                const statsB = calcularEstatisticas(timeB);
+                
+                // Exibir times
+                document.getElementById('timeA').innerHTML = timeA.map(exibirJogador).join('');
+                document.getElementById('timeB').innerHTML = timeB.map(exibirJogador).join('');
+                
+                // Exibir estatísticas
+                document.getElementById('mediaA').textContent = statsA.media;
+                document.getElementById('totalA').textContent = statsA.total;
+                document.getElementById('mediaB').textContent = statsB.media;
+                document.getElementById('totalB').textContent = statsB.total;
+                
+                // Avaliar equilíbrio
+                const equilibrio = avaliarEquilibrio(
+                    parseFloat(statsA.media), 
+                    parseFloat(statsB.media), 
+                    timeA.tentativasUsadas
+                );
+                const equilibrioEl = document.getElementById('equilibrioInfo');
+                equilibrioEl.className = `equilibrio ${equilibrio.classe}`;
+                equilibrioEl.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>📊 Jogadores Presentes: ${jogadores.length}/16</strong>
+                    </div>
+                    <div style="margin-bottom: 10px; font-size: 0.9em; color: #666;">
+                        🎲 Divisão Randômica Equilibrada - Melhor resultado em ${timeA.tentativasUsadas} tentativas
+                    </div>
+                    <strong>${equilibrio.texto}</strong>
+                `;
+                
+                // Mostrar resultado
+                document.getElementById('resultado').classList.remove('hidden');
+                
+                // Scroll para o resultado
+                document.getElementById('resultado').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                console.log('⚽ Times divididos com sucesso!');
+                console.log(`📊 Jogadores presentes: ${jogadores.length}`);
+                console.log(`🎲 Algoritmo randômico: ${timeA.tentativasUsadas} tentativas, diferença: ${timeA.diferenca}`);
+                console.log('Time A:', timeA.map(j => `${j.nome} (${j.nota}${j.isGoleiro ? ' - Goleiro' : ''})`));
+                console.log('Time B:', timeB.map(j => `${j.nome} (${j.nota}${j.isGoleiro ? ' - Goleiro' : ''})`));
+                console.log(`Estatísticas - Time A: ${statsA.media} | Time B: ${statsB.media}`);
+                
+            } catch (error) {
+                alert(`❌ Erro: ${error.message}`);
+            }
         }
 
         // Inicializar aplicação
