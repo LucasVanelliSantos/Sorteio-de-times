@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divisão Equilibrada de Times</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #4CAF50;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .jogadores-input {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .jogador-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .jogador-item input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .jogador-item input[type="number"] {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .jogador-item input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+        }
+
+        .controles {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .times-resultado {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .time {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .time-a {
+            border-top: 5px solid #FF6B6B;
+        }
+
+        .time-b {
+            border-top: 5px solid #4ECDC4;
+        }
+
+        .time h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .time-a h3 {
+            color: #FF6B6B;
+        }
+
+        .time-b h3 {
+            color: #4ECDC4;
+        }
+
+        .jogador-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .jogador-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .jogador-nome {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .jogador-nota {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .estatisticas {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .equilibrio {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            border-radius: 10px;
+        }
+
+        .equilibrio-bom {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+        }
+
+        .equilibrio-medio {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+        }
+
+        .equilibrio-ruim {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .times-resultado {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .jogadores-input {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚽ Divisão Equilibrada de Times ⚽</h1>
+
+        <div class="section">
+            <h2>👥 Cadastro dos 16 Jogadores</h2>
+            <div class="jogadores-input" id="jogadoresInput">
+                <!-- Jogadores serão gerados dinamicamente -->
+            </div>
+            
+            <div class="controles">
+                <button class="btn btn-secondary" onclick="preencherExemplo()">
+                    📝 Preencher Exemplo
+                </button>
+                <button class="btn btn-warning" onclick="limparTodos()">
+                    🗑️ Limpar Tudo
+                </button>
+                <button class="btn" onclick="dividirTimes()">
+                    🎲 Dividir Times
+                </button>
+            </div>
+        </div>
+
+        <div id="resultado" class="section hidden">
+            <h2>🏆 Times Formados</h2>
+            
+            <div class="equilibrio" id="equilibrioInfo">
+                <!-- Info de equilíbrio será inserida aqui -->
+            </div>
+
+            <div class="times-resultado">
+                <div class="time time-a">
+                    <h3>🔴 Time A</h3>
+                    <div id="timeA"></div>
+                    <div class="estatisticas">
+                        <div class="stat">
+                            <div class="stat-number" id="mediaA">0</div>
+                            <div class="stat-label">Média</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" id="totalA">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="time time-b">
+                    <h3>🔵 Time B</h3>
+                    <div id="timeB"></div>
+                    <div class="estatisticas">
+                        <div class="stat">
+                            <div class="stat-number" id="mediaB">0</div>
+                            <div class="stat-label">Média</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" id="totalB">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controles">
+                <button class="btn" onclick="dividirTimes()">
+                    🔄 Redistribuir Times
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar campos de entrada para 16 jogadores
+        function inicializarCampos() {
+            const container = document.getElementById('jogadoresInput');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= 16; i++) {
+                const jogadorItem = document.createElement('div');
+                jogadorItem.className = 'jogador-item';
+                jogadorItem.innerHTML = `
+                    <input type="text" placeholder="Nome do Jogador ${i}" id="nome${i}">
+                    <input type="number" min="0" max="10" step="0.1" placeholder="Nota" id="nota${i}">
+                `;
+                container.appendChild(jogadorItem);
+            }
+        }
+
+        // Preencher exemplo com dados fictícios
+        function preencherExemplo() {
+            const nomes = [
+                'Vanelli', 'Leandro', 'Rodrigo', 'Airton', 'Clinton', 'Cardozo', 'Patrick', 'Joaquim',
+                'Denis', 'Rafel', 'Carlos', 'Cristiano', 'Micael', 'teste', 'teste', 'teste'
+            ];
+            
+            const notas = [8, 8, 8, 8, 8, 10, 8, 9, 8, 8, 8, 10, 9, 0, 0, 0];
+            
+            for (let i = 1; i <= 16; i++) {
+                document.getElementById(`nome${i}`).value = nomes[i-1];
+                document.getElementById(`nota${i}`).value = notas[i-1];
+            }
+        }
+
+        // Limpar todos os campos
+        function limparTodos() {
+            for (let i = 1; i <= 16; i++) {
+                document.getElementById(`nome${i}`).value = '';
+                document.getElementById(`nota${i}`).value = '';
+            }
+            document.getElementById('resultado').classList.add('hidden');
+        }
+
+        // Coletar dados dos jogadores
+        function coletarJogadores() {
+            const jogadores = [];
+            
+            for (let i = 1; i <= 16; i++) {
+                const nome = document.getElementById(`nome${i}`).value.trim();
+                const nota = parseFloat(document.getElementById(`nota${i}`).value);
+                
+                if (nome && !isNaN(nota) && nota >= 0 && nota <= 10) {
+                    jogadores.push({ nome, nota });
+                }
+            }
+            
+            return jogadores;
+        }
+
+        // Algoritmo para dividir times de forma equilibrada
+        function dividirTimesEquilibrados(jogadores) {
+            // Ordenar jogadores por nota (decrescente)
+            const jogadoresOrdenados = [...jogadores].sort((a, b) => b.nota - a.nota);
+            
+            const timeA = [];
+            const timeB = [];
+            
+            // Distribuição alternada dos melhores jogadores
+            for (let i = 0; i < jogadoresOrdenados.length; i++) {
+                if (i % 2 === 0) {
+                    timeA.push(jogadoresOrdenados[i]);
+                } else {
+                    timeB.push(jogadoresOrdenados[i]);
+                }
+            }
+            
+            // Embaralhar dentro de cada time para randomizar
+            embaralharArray(timeA);
+            embaralharArray(timeB);
+            
+            return { timeA, timeB };
+        }
+
+        // Função para embaralhar array
+        function embaralharArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Calcular estatísticas do time
+        function calcularEstatisticas(time) {
+            const total = time.reduce((sum, jogador) => sum + jogador.nota, 0);
+            const media = total / time.length;
+            return { total: total.toFixed(1), media: media.toFixed(1) };
+        }
+
+        // Exibir jogador no time
+        function exibirJogador(jogador) {
+            return `
+                <div class="jogador-card">
+                    <span class="jogador-nome">${jogador.nome}</span>
+                    <span class="jogador-nota">${jogador.nota}</span>
+                </div>
+            `;
+        }
+
+        // Avaliar equilíbrio entre times
+        function avaliarEquilibrio(mediaA, mediaB) {
+            const diferenca = Math.abs(mediaA - mediaB);
+            
+            if (diferenca <= 0.3) {
+                return {
+                    classe: 'equilibrio-bom',
+                    texto: `✅ Times muito equilibrados! Diferença de média: ${diferenca.toFixed(2)}`
+                };
+            } else if (diferenca <= 0.6) {
+                return {
+                    classe: 'equilibrio-medio',
+                    texto: `⚠️ Times razoavelmente equilibrados. Diferença de média: ${diferenca.toFixed(2)}`
+                };
+            } else {
+                return {
+                    classe: 'equilibrio-ruim',
+                    texto: `❌ Times desiquilibrados. Diferença de média: ${diferenca.toFixed(2)}`
+                };
+            }
+        }
+
+        // Função principal para dividir times
+        function dividirTimes() {
+            const jogadores = coletarJogadores();
+            
+            if (jogadores.length !== 16) {
+                alert('❌ Por favor, preencha todos os 16 jogadores com nomes e notas válidas (0-10)!');
+                return;
+            }
+            
+            const { timeA, timeB } = dividirTimesEquilibrados(jogadores);
+            
+            // Calcular estatísticas
+            const statsA = calcularEstatisticas(timeA);
+            const statsB = calcularEstatisticas(timeB);
+            
+            // Exibir times
+            document.getElementById('timeA').innerHTML = timeA.map(exibirJogador).join('');
+            document.getElementById('timeB').innerHTML = timeB.map(exibirJogador).join('');
+            
+            // Exibir estatísticas
+            document.getElementById('mediaA').textContent = statsA.media;
+            document.getElementById('totalA').textContent = statsA.total;
+            document.getElementById('mediaB').textContent = statsB.media;
+            document.getElementById('totalB').textContent = statsB.total;
+            
+            // Avaliar equilíbrio
+            const equilibrio = avaliarEquilibrio(parseFloat(statsA.media), parseFloat(statsB.media));
+            const equilibrioEl = document.getElementById('equilibrioInfo');
+            equilibrioEl.className = `equilibrio ${equilibrio.classe}`;
+            equilibrioEl.innerHTML = `<strong>${equilibrio.texto}</strong>`;
+            
+            // Mostrar resultado
+            document.getElementById('resultado').classList.remove('hidden');
+            
+            // Scroll para o resultado
+            document.getElementById('resultado').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+            
+            console.log('⚽ Times divididos com sucesso!');
+            console.log('Time A:', timeA.map(j => `${j.nome} (${j.nota})`));
+            console.log('Time B:', timeB.map(j => `${j.nome} (${j.nota})`));
+            console.log(`Estatísticas - Time A: ${statsA.media} | Time B: ${statsB.media}`);
+        }
+
+        // Inicializar aplicação
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarCampos();
+            console.log('⚽ Aplicativo de Divisão de Times carregado!');
+        });
+
+        // Atalho de teclado - Enter para dividir times
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && event.ctrlKey) {
+                event.preventDefault();
+                dividirTimes();
+            }
+        });
+    </script>
+</body>
+</html>
